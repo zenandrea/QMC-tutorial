@@ -5,9 +5,9 @@ import sys
 import matplotlib.pyplot as plt
 
 stdoutOrigin=sys.stdout 
-sys.stdout = open("Harmonic/Harm_1D_unif_0.005_200000_100000_Et0_14_1800bin/Reblocking_log.txt", "w") #print the output in a file
+sys.stdout = open("Reblocking_log.txt", "w") #print the output in a file
 
-data = np.loadtxt('Harmonic/Harm_1D_unif_0.005_200000_100000_Et0_14_1800bin/energie.txt')
+data = np.loadtxt('energie.txt')
 print('Steps in energie.txt = ', len(data) )
 
 Tequil = 15 #au
@@ -38,7 +38,7 @@ ax.tick_params(axis='both', labelsize=11)
 
 
 
-fig.savefig("Harmonic/Harm_1D_unif_0.005_200000_100000_Et0_14_1800bin/Reblocking Pyplot.png", dpi=300)
+fig.savefig("fig.png", dpi=300)
 
 sys.stdout.close()
 sys.stdout=stdoutOrigin
