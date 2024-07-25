@@ -1,4 +1,4 @@
-#Population Nw	Mean energy 	Standard error	dt=0.05 a.u.	Nstep*Nw=10^9
+#Population Nw	Mean energy	Standard error	tau=0.05 a.u.	Nstep*Nw=10^9
 60		0.507563        0.000136
 100		0.504278        0.000131
 180		0.502293        0.000128
