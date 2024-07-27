@@ -203,7 +203,7 @@ int main(){
       if(n<=Tequil/tau && ((n % stepsperblock)==0)){  //print the wavefunction during the equilibration phase
         fprintf(ff,"# wavefunction at step number %ld \n",n);
         fprintf(ff, "\n");
-        f_onda(Nbin,Rmax,Nwt,D,w,phi); //creates the histogram in the ‘phi’ vector
+        f_onda(Nbin,Rmax,Nwt,D,w,phi); //creates the histogram in the â€˜phiâ€™ vector
         if(D>1){
           for(i=0;i<Nbin;i++){
             fprintf(ff,"%f \t %f \n",delta*(i+0.5), phi[i]);
@@ -306,7 +306,7 @@ int main(){
   fclose(fe);
   fclose(fp);
   
-  //reblocking, see J. Chem. Phys. 91, 461–466 (1989)
+  //reblocking, see J. Chem. Phys. 91, 461â€“466 (1989)
   binSize = 1;
   while (numMeas >= 100) {
     fprintf(fb,"%ld \t\t %lf \t\t %ld \n", binSize, binning(E_block, numMeas), numMeas);
@@ -489,7 +489,7 @@ double norm(double mean, double std_dev)
 }
 
 
-double rand_val(int seed) //Multiplicative LCG, Schrage’s algorithm
+double rand_val(int seed) //Multiplicative LCG, Schrageâ€™s algorithm
 {
   const long  a =      16807;  // Multiplier
   const long  m = 2147483647;  // Modulus, 2^31-1, Mersenne prime
@@ -595,7 +595,7 @@ double binning(double *data , long int numMeas){
     mean += data[2 * i] + data[2 * i + 1];
     variance += data[2 * i] * data[2 * i] +
     data[2 * i + 1] * data[2 * i + 1];
-    data[i] = 0.5 * (data[2 * i] + data[2 * i + 1]);  //prepare the ‘data’ vector for the next binning iteration, each time halving the portion to be analysed
+    data[i] = 0.5 * (data[2 * i] + data[2 * i + 1]);  //prepare the â€˜dataâ€™ vector for the next binning iteration, each time halving the portion to be analysed
   }
   if (2 * i < numMeas) {
     mean += data[2 * i];
