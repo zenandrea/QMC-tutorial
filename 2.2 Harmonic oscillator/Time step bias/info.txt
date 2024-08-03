@@ -1,0 +1,8 @@
+Output files from the code "prog.c"
+
+Simulation parameters:
+1D harmonic potential
+Uniform distribution of walkers
+dtau*Nstep = 10^3 a.u.
+Ntarget = 10^5
+Initial Et = 0 a.u.
