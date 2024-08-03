@@ -1,0 +1,12 @@
+Output files from the code "prog_seq.c"
+
+Simulation parameters:
+3D Hydrogen atom
+Uniform distribution of walkers
+dtau = 0.001 a.u.
+Nequil*dtau = 20 a.u.
+Nstep = 400000
+Ntarget = 10^4
+Initial Et = 0 a.u.
+Rmax = 20
+Nbin = 1600
