@@ -9,25 +9,24 @@
 #define printall 0
 #define debug 1
 #define maxNwf 100 //total allocated memory for the walkers' positions
-#define stepsperblock 50 //20
+#define stepsperblock 50 // controls how often the walker distribution is saved in a text file
 #define constraint 10  //it must be >=2 and <<Nw
-//#define Tequil 5.0  // atomic units
-//#define offset 1.0  // per terzo potenziale
+//#define Tequil 5.0  // in atomic units
 
-void GeneraWalkerG(long int D, long int Nw, double *Vpar, double **w);                    //inizializza le posizioni dei walker con distribuzione gaussiana
-void GeneraWalkerU(long int D, long int Nw, double *Vpar, double **w);                    //inizializza le posizioni dei walker con distribuzione uniforme
-double V_pot(long int D, long int tipo, double *Vpar, double *x);                    //calcola il potenziale sentito dall'iesimo walker
-void Propagazione(long int D,long int N, double **w, double tau);            //ogni walker fa uno step di random walk
-void Branching(long int D, long int *Nwt,long int Nw, double tau, double *A, double *B, double Et, double **w); //processo di nascita e di morte
-double norm(double mean, double std_dev); //genera numeri gaussiani con la box-muller
-double rand_val(int seed);         // funzione simile a rand, genera un double casuale compreso fra 0 e 1
-void f_onda(long int Nbin, double Rmax,long int Nwt,long int D, double **w, double *); //serve a generare un istogramma normalizzato per rappresentare la f.onda
-double binning(double *data , long int numMeas);                        //funzione utilizzata per il calcolo del reblocking
-void f_pot(long int Nbin, double Rmax, long tipo, double* Vpar, double *pot); //serve a generare un istogramma normalizzato per rappresentare la f.onda
+void GeneraWalkerG(long int D, long int Nw, double *Vpar, double **w);                    //initialises walker positions with Gaussian distribution
+void GeneraWalkerU(long int D, long int Nw, double *Vpar, double **w);                    //initialises walker positions with uniform distribution
+double V_pot(long int D, long int tipo, double *Vpar, double *x);                    //calculates the potential felt by the i-th walker
+void Propagazione(long int D,long int N, double **w, double tau);           //each walker does a random walk step
+void Branching(long int D, long int *Nwt,long int Nw, double tau, double *A, double *B, double Et, double **w); //birth-death process
+double norm(double mean, double std_dev); //generates Gaussian random numbers with the box-muller algorithm
+double rand_val(int seed);         // function similar to rand, generates a random double between 0 and 1
+void f_onda(long int Nbin, double Rmax,long int Nwt,long int D, double **w, double *); //it is used to generate a normalised histogram to represent the wavefunction
+double binning(double *data , long int numMeas);                        //function used for the reblocking calculation
+void f_pot(long int Nbin, double Rmax, long tipo, double* Vpar, double *pot); //it is used to generate a normalised histogram to represent the wavefunction
 
-//per compilare: gcc -lm prog_seq.c -o prog_seq
+//to compile: gcc -lm prog_seq.c -o prog_seq
 
-
+//Alfonso Annarelli, alfonso.annarelli@gmail.com
 
 
 
@@ -47,17 +46,17 @@ int main(){
 
   //input
   do {
-    printf("Potenziale: digita \n");  //dato il resto del programma, per D>1 funzionano solo potenziali radiali
-    printf("1 per il potenziale armonico, \n");
-    printf("2 per l'atomo di idrogeno, \n");
-    printf("3 per (x-a)^2*(x+a)^2, \n");
-    printf("4 per (x-a)^n*(x+a)^n. \n");
+    printf("Potential: type \n");					
+    printf("1 for the harmonic potential, \n");
+    printf("2 for the Hydrogen atom, \n");
+    printf("3 for V(x)=(x-a)^2*(x+a)^2, \n");
+    printf("4 for V(x)=(x-a)^n*(x+a)^n. \n");
     scanf("%ld",&tipo);
   }while((tipo<1)||(tipo>4));
 
   if (tipo==3){
     Vpar = (double*) malloc( 2*sizeof(double) );
-    printf("Potenziale: b*(x-a)^2*(x+a)^2 \na=?");
+    printf("Potential: b*(x-a)^2*(x+a)^2 \na=?");
     scanf("%lf",&Vpar[0]);
     printf("b=?");
     scanf("%lf",&Vpar[1]);
@@ -65,7 +64,7 @@ int main(){
 
   if (tipo==4){
     Vpar = (double*) malloc( 3*sizeof(double) );
-    printf("Potenziale: b*(x-a)^n*(x+a)^n \nn=?");
+    printf("Potential: b*(x-a)^n*(x+a)^n \nn=?");
     scanf("%lf",&Vpar[2]);
     printf("a=?");
     scanf("%lf",&Vpar[0]);
@@ -73,37 +72,40 @@ int main(){
     scanf("%lf",&Vpar[1]);
   }
 
-  printf("Inserire dimensione\n");
-  scanf("%ld",&D);
+  printf("Enter dimensionality\n");
+  scanf("%ld",&D);					//if D>1, this code works only with radial potentials
 
   do{
-    printf("Scegli la distribuzione iniziale dei walker: digita 1 per uniforme, 2 per gaussiana \n");
+    printf("Choose initial walker distribution: enter 1 for uniform, 2 for Gaussian \n");
     scanf("%ld", &distr);
   }while((distr!=1) && (distr!=2));
 
-  printf("Inserire il time step tau in a.u.\n");
+  printf("Enter the time step dtau in a.u.\n");
   scanf("%lf",&tau);
 
-  printf("Inserire il numero di step\n");
+  printf("Enter the number of simulation steps\n");
   scanf("%ld",&Nsteps);
   
-  printf("Inserire il tempo di equilibrazione in a.u.\n"); //dell'ordine di 10 a.u. o più
+  printf("Enter the equilibration time in a.u.\n"); //usually 10-20 a.u.
   scanf("%lf",&Tequil);
 
-  printf("Inserire un numero di walker target\n");
+  printf("Enter a target number of walkers\n");
   scanf("%ld",&Nw);
   Nwt = Nw;    // initial number of walkers = target
 
   //Et = 0.0;
-  printf("Inserisci il valore di Et iniziale in a.u. \n");
+  printf("Enter the initial value of Et in a.u. \n");
   scanf("%lf",&Et);
 
-  printf("Inserisci flag funzione d'onda (1: si (Rmax=10,Nbin=1000); 2: si input Rmax,Nbin;  else:altro) \n");
-  scanf("%ld",&flag);
+  do {
+    printf("Parameters of the wavefunction histogram (1: (Rmax=10,Nbin=1000); 2: user's input Rmax, Nbin) \n");
+    scanf("%ld",&flag);
+  } while((flag!=1)&&(flag!=2));
+  
   if(flag==2){
-    printf("inserisci distanza massima Rmax \n");
+    printf("Enter the maximum distance Rmax \n");  //choose a sufficiently large value for Rmax so that the walkers do not cross the system boundary
     scanf("%lf",&Rmax);
-    printf("Inserisci numero di bin Nbin (pari) \n");
+    printf("Enter the number of bins Nbin \n");
     scanf("%ld",&Nbin);
     flag = 1;
   }
@@ -111,14 +113,14 @@ int main(){
 
 
 
-  // w: matrice con le posizioni dei walker
+  // w: matrix of walker positions
   w = (double**) malloc (maxNwf*Nw*sizeof(double*));
   for (i=0; i<Nw; i++) {
     w[i]=(double*) malloc (D*sizeof(double));
   }
-  printf("memoria allocata \n");
+  printf("memory has been allocated \n");
 
-  // inizializzazione funzioni random
+  // initialisation of random functions
   rand_val(time(NULL));
   srand(time(NULL));
 
@@ -129,24 +131,24 @@ int main(){
     GeneraWalkerG(D,Nw,Vpar,w);
   }
   else{
-    printf("Distribuzione iniziale non definita correttamente \n");
+    printf("Initial distribution not correctly defined \n");
     exit(EXIT_FAILURE);
   }
 
-  printf("walker generati \n");
+  printf("Walkers has been generated\n");
 
 
   Ebest = 0.0;
   E=0.0;
 
-  //file di output
+  //output files
   FILE *fe;
   FILE *fb;
   FILE *fp;
   FILE *ff;
   FILE *fpot;
 
-  fe=fopen("energie.txt","w");
+  fe=fopen("energie.txt","w");	// energy at each step
   fprintf(fe,"#n \t  T  \t \t  Et \t \t  Ebest \n");
 
   fp=fopen("popolazione.txt","w");
@@ -156,7 +158,7 @@ int main(){
   fprintf(fb, "binSize \t standard error \t numMeas \n");
 
   if (flag==1) {
-    ff=fopen("f_onda_seq.txt","w");
+    ff=fopen("f_onda_seq.txt","w");	// walkers distribution during the entire simulation
     fprintf(ff,"#R \t \t Phi \n");
     phi = (double*) malloc( Nbin * sizeof(double) );
     phi_eq = (double*) malloc( Nbin * sizeof(double) );
@@ -176,19 +178,19 @@ int main(){
   NstepsEq = (long)( Tequil / tau );
   numMeas = Nsteps - NstepsEq;
   if (numMeas>0){
-    E_block = (double*) malloc( numMeas * sizeof(double) );  //per registrare il valore di Et ad ogni passo
+    E_block = (double*) malloc( numMeas * sizeof(double) );  //to record the Et value at each step
   } else {
     E_block = (double*) malloc(0);
     numMeas = 0.0;
   }
 
-  //inizio ciclo
+  //start of the main loop
   for( n=0; n<Nsteps; n++ ){
 
-    // A: potenziali prima della diffusione
-    // B: potenziali dopo la diffusione
+    // A: potential before the diffusion
+    // B: potential after the diffusion
     printf("%6ld  Nwt=%ld ", n, Nwt);
-    A = (double*) malloc (Nwt*sizeof(double)); //l'allocazione va fatta ad ogni step perchè Nwt è variabile
+    A = (double*) malloc (Nwt*sizeof(double)); //memory allocation must be done at each step because Nwt is variable
 
     for(i=0;i<Nwt;i++){
       if(*(w+i)!=NULL){
@@ -198,11 +200,11 @@ int main(){
 
     if(flag==1){
       delta=Rmax/(double)Nbin;
-      if(n>=Tequil/tau){  //costruisce la funzione d'onda durante l'intera simulazione
-      //if((n % stepsperblock)==0){			//stampa anche la parte di equilibrazione
-        fprintf(ff,"# funzione d'onda al passo numero %ld \n",n);
+      if(n>=Tequil/tau){  //print the wavefunction during the entire simulation (excluding the equilibration phase)
+      //if((n % stepsperblock)==0){			//print also during the equilibration phase
+        fprintf(ff,"# wavefunction at step number %ld \n",n);
         fprintf(ff, "\n");
-        f_onda(Nbin,Rmax,Nwt,D,w,phi); //costruisce l'istogramma nel vettore "phi"
+        f_onda(Nbin,Rmax,Nwt,D,w,phi); //creates the histogram in the "phi" vector
         if(D>1){
           for(i=0;i<Nbin;i++){
             fprintf(ff,"%f \t %f \n", delta*(i+0.5), phi[i]);
@@ -229,11 +231,11 @@ int main(){
       }
     }
 
-    //printf(">>> step propagazione n. %ld \n",n);
+    //printf(">>> diffusion step n. %ld \n",n);
 
     Branching(D, &Nwt, Nw, tau, A,B, Et,w);       //Branching step
 
-    //printf("step branching n. %ld eseguito \n",n);
+    //printf("branching step n. %ld \n",n);
     
     printf("newNwt=%ld  ", Nwt);
 
@@ -241,7 +243,7 @@ int main(){
     free(B);
 
 
-    // definire nuova energia Et
+    // update the value of the energy estimator <Et>
     if ( n<=NstepsEq ){
       nblock = n % stepsperblock;
       Ebest = ( Et + Ebest * nblock ) / (nblock+1);
@@ -250,22 +252,21 @@ int main(){
       Ebest = ( Et + Ebest * nblock ) / (nblock+1);
     }
 
-    // Aggiornare Et
-    Et = Ebest-(1.0/tau)*log((double) Nwt / (double) Nw);       //ricalcolo di Et all'equilibrio
+    // update Et
+    Et = Ebest-(1.0/tau)*log((double) Nwt / (double) Nw);
 
-    // riempio array con valore Et dopo equilibrazione
+    // fill the array with Et values after the equilibration phase
     if ( n>=NstepsEq ) 
 		E_block[n-NstepsEq]=Et;
 
     printf("Et= %f \t Ebest= %f \n", Et,Ebest);
 
-    //fprintf(fe,"%f,%f,%f\n",n*tau, Et,Ebest);
     fprintf(fe,"%ld\t%f\t%f\t%f\n", n, n*tau, Et, Ebest);
 
 
 
     if(flag==1){
-      if(n>=NstepsEq){  //è corretto che ci sia >=, in modo che mediamo su Nsteps-NstepsEq campionamenti di phi (?)
+      if(n>=NstepsEq){
         f_onda(Nbin,Rmax,Nwt,D,w,phi);
         for(i=0;i<Nbin;i++){
           phi_eq[i]+=phi[i];
@@ -273,7 +274,7 @@ int main(){
       }
     }
 
-  } // fine ciclo DMC  
+  } // end of the main loop
   free(w);
   if (tipo==3 || tipo==4){
     free(Vpar);
@@ -282,10 +283,10 @@ int main(){
   if(flag==1){
     fclose(ff);
     ff = fopen("f_onda.txt","w");
-    printf("Scrivo funzione d'onda all'equilibrio \n" );
-    // calcolo funzione d'onda all'equilibrio
+    printf("Saving the equilibrium wavefunction \n" );
+    // wavefunction calculation at equilibrium
     for(i=0;i<Nbin;i++){
-      phi_eq[i]=phi_eq[i]/(Nsteps-NstepsEq);  //calcolata come la media delle funzioni d'onda ad ogni passo
+      phi_eq[i]=phi_eq[i]/(Nsteps-NstepsEq);  //calculated as the average of the wavefunctions at each step
     }
     
     if(D>1){
@@ -306,21 +307,20 @@ int main(){
   fclose(fe);
   fclose(fp);
   
-  //reblocking
+  //reblocking, see J. Chem. Phys. 91, 461-466 (1989)
   binSize = 1;
   while (numMeas >= 100) {
-
     fprintf(fb,"%ld \t\t %lf \t\t %ld \n", binSize, binning(E_block, numMeas), numMeas);
     binSize *= 2;
     numMeas /= 2;
   }
   fclose(fb);
   free(E_block);
-  printf("Reblocking completato \n");
-  free(phi_eq);  //WARNING! Il programma non dealloca correttamente phi e phi_eq se i walker attraversano i bordi e si arresta in questo punto in maniera anomala, quindi lasciare queste due istruzioni sempre per ultime
+  printf("Reblocking completed \n");
+  free(phi_eq);  
   free(phi);
 
-  printf("Programma eseguito \n");
+  printf("Programme successfully executed \n");
 
   return 0;
 }
@@ -336,11 +336,7 @@ void GeneraWalkerG(long int D, long int Nw, double *Vpar, double **w){
   long int i, j;
   for(i=0;i<Nw;i++){
     for(j=0;j<D;j++){
-      w[i][j] = norm(+Vpar[0], Vpar[0]/5.0);	//norm(0,1);
-	  /*if ((rand()/(double)(RAND_MAX)-0.5)>0)
-        w[i][j] = norm(+Vpar[0], Vpar[0]/5.0);
-      else
-        w[i][j] = norm(-Vpar[0],Vpar[0]/5.0);		//doppia gaussiana */
+      w[i][j] = norm(0,1);		//the position of each walker is drawn from a gaussian distribution
 	}
   }
 }
@@ -349,7 +345,7 @@ void GeneraWalkerU(long int D, long int Nw, double *Vpar, double **w){
   long int i, j;
   for(i=0;i<Nw;i++){
     for(j=0;j<D;j++){
-      w[i][j]=5*(rand()/(double)(RAND_MAX)-0.5);		//(rand()/(double)(RAND_MAX)-0.5);
+      w[i][j]=(rand()/(double)(RAND_MAX)-0.5);		// drawn from an uniform distribution
     }
   }
 }
@@ -384,14 +380,14 @@ double V_pot(long int D, long int tipo, double *Vpar, double *x){
     }
   }
   else{
-    printf("potenziale non definito correttamente \n");
+    printf("potential not correctly defined \n");
     exit(EXIT_FAILURE);
   }
 
   return a;
 }
 
-void Propagazione(long int D,long int Nwt, double **w, double tau){
+void Propagazione(long int D,long int Nwt, double **w, double tau){		 //diffusion function
   long int i,j;
   for(i=0;i<Nwt;i++){
     for(j=0;j<D;j++){
@@ -406,13 +402,13 @@ void Branching(long int D, long int *pNwt, long int Nw, double tau, double *A, d
   double **wnew;
   long int *M;
 
-  M = (long int *) malloc( *pNwt * sizeof(long int) ); //contiene il numero di copie generate da ogni walker
+  M = (long int *) malloc( *pNwt * sizeof(long int) ); //it contains the number of copies generated by each walker
 
   for( i=0 ; i < *pNwt; i++ ){
     wi = exp(-( tau * ( A[i] + B[i] - 2*Et )/2) );
     if(wi>=constraint)
     	wi=constraint;	//constraint for population "explosions", useful for potential with divergences
-    Mi = (long int)(wi+(rand()/(double)RAND_MAX)); //il cast a long int tronca sempre per difetto il numero
+    Mi = (long int)(wi+(rand()/(double)RAND_MAX)); //casting to long int always truncates the number down
     if (printall) printf("Mi= %ld \n",Mi);
     M[i] = Mi;
     Nnew += Mi;
@@ -420,9 +416,9 @@ void Branching(long int D, long int *pNwt, long int Nw, double tau, double *A, d
   //printf("Nwt=%ld\tNnew=%ld\n", (*pNwt), Nnew );
 
   if ( Nnew <= maxNwf * (*pNwt) ) {
-    wnew = (double**) malloc( Nnew * sizeof(double*) );  //stesse dimensioni di w
+    wnew = (double**) malloc( Nnew * sizeof(double*) );  //same size of w
   } else {
-    printf("Errore, il programma ha utilizzato tutta la memoria allocata, aumentare maxNwf.\n");
+    printf("Error: the programme has run out of allocated memory, please increase maxNwf.\n");
     exit(EXIT_FAILURE);
   }
 
@@ -430,13 +426,11 @@ void Branching(long int D, long int *pNwt, long int Nw, double tau, double *A, d
   for( i=0; i < *pNwt; i++ ){
     if ( M[i]==0 ) {
       // do not replicate walkers
-      //free( w[i] ); //meglio non deallocare porzioni di memoria qui
     }
     else {
-      wnew[inew] = w[i];  //perchè non eliminare questo passaggio e far partire il for da j=0?
+      wnew[inew] = w[i];
       inew++;
-      for ( j=1; j<M[i]; j++ ) {  //registra la posizione delle copie dello stesso walker in wnew, in sequenza
-      //for ( j=0; j<M[i]; j++ ) {
+      for ( j=1; j<M[i]; j++ ) {  //it records the position of copies generated from the same walker in wnew
         wnew[inew] = (double*) malloc( D*sizeof(double) );
         for (k=0;k<D;k++)
         	wnew[inew][k] = w[i][k];
@@ -446,11 +440,11 @@ void Branching(long int D, long int *pNwt, long int Nw, double tau, double *A, d
   }
 
   if (inew != Nnew){
-    printf("Errore: inew dopo ciclo diverso da Nnew");
+    printf("Error: inew after the cycle is different from Nnew");
     exit(EXIT_FAILURE);
   }
 
-// libero memoria usata da wnew
+// free the memory used by wnew
   for( i=0; i<Nnew; i++ ){
     w[i] = wnew[i];
   }
@@ -459,7 +453,7 @@ void Branching(long int D, long int *pNwt, long int Nw, double tau, double *A, d
 
   *pNwt = Nnew;
   if(*pNwt == 0){
-    printf("Errore, tutti i walker sono morti \n");
+    printf("Error: no walkers left \n");
     exit(EXIT_FAILURE);
   }
 }
@@ -469,7 +463,7 @@ void Branching(long int D, long int *pNwt, long int Nw, double tau, double *A, d
 double norm(double mean, double std_dev)
 {
   double   u, r, theta;           // Variables for Box-Muller method
-  double   x;                     // Normal(0, 1) rv
+  double   x;                     // Normal(0, 1) random variable (rv)
   double   norm_rv;               // The adjusted normal rv
 
   // Generate u
@@ -537,9 +531,9 @@ void f_onda(long int Nbin, double Rmax,long int Nwt,long int D, double **w, doub
 
   if(D==1){
     for(i=0;i<Nwt;i++){
-      bin=(long int)(w[i][0]*Nbin/Rmax+(Nbin/2.0)); //legge la posizione di un walker alla volta e incrementa di 1 la colonna corrispondente nell'istogramma. Probabilmente questo tipo di assegnazione (da posizione a bin) è asimmetrica, inducendo un bias nell'energia calcolata
+      bin=(long int)(w[i][0]*Nbin/Rmax+(Nbin/2.0)); 	//it reads the position of one walker at a time and increments the corresponding column in the histogram by 1.
       if (bin<0 || bin>Nbin-1){
-        printf("bin=%ld, w=%lf, Aumenta Rmax \n",bin,w[i][0]);  //è possibile che bin=-1 o bin=Nbin perchè non stiamo rigettando gli step di Diffusione attraverso i bordi
+        printf("bin=%ld, w=%lf, please set a larger Rmax. \n",bin,w[i][0]);  
         exit(EXIT_FAILURE);
       }
       histo[bin]++;
@@ -555,10 +549,10 @@ void f_onda(long int Nbin, double Rmax,long int Nwt,long int D, double **w, doub
 
       bin=(long int)(R_i*Nbin/Rmax);
       if(bin<Nbin){
-        histo[bin]++;  //equivale ad integrare su tutte le coordinate (polari) tranne quella radiale
+        histo[bin]++;  //it is equivalent to integrating over all (polar) coordinates except the radial one
       } else {
-        printf("Aumenta Rmax \n");
-        //exit(EXIT_FAILURE);
+        printf("Please set a larger Rmax. \n");
+        exit(EXIT_FAILURE);
       }
     }
   }
@@ -568,14 +562,14 @@ void f_onda(long int Nbin, double Rmax,long int Nwt,long int D, double **w, doub
       normalizzazione+=pow(histo[i],2);
     }
 
-    normalizzazione=sqrt(normalizzazione*Rmax/Nbin); //Rmax/Nbin=delta, appare quando si calcola l'integrale per la normalizzazione 
+    normalizzazione=sqrt(normalizzazione*Rmax/Nbin); //Rmax/Nbin=delta
 
     for(i=0;i<Nbin;i++){
       histo[i]=histo[i]/normalizzazione;
     }
   }
   if(D==3){
-    normalizzazione=Nwt*(Rmax/Nbin)/(8*sqrt(PI)); //Vale solo per l'atomo di idrogeno, in particolare normalizza 4pi*r^2*Phi(r)
+    normalizzazione=Nwt*(Rmax/Nbin)/(8*sqrt(PI)); //Only applies to the hydrogen atom, specifically normalising the distribution 4pi*r^2*Phi(r)
     for(i=0;i<Nbin;i++){
       histo[i]=histo[i]/normalizzazione;
     }
@@ -602,14 +596,12 @@ double binning(double *data , long int numMeas){
     mean += data[2 * i] + data[2 * i + 1];
     variance += data[2 * i] * data[2 * i] +
     data[2 * i + 1] * data[2 * i + 1];
-    data[i] = 0.5 * (data[2 * i] + data[2 * i + 1]);  //in tal modo preparo il vettore "data" per la prossima chiamata di binning, dimezzando di volta in volta la porzione da analizzare
+    data[i] = 0.5 * (data[2 * i] + data[2 * i + 1]);  //prepare the "data" vector for the next binning iteration, each time halving the portion to be analysed
   }
-  if (2 * i < numMeas) {  //nel caso non venisse preso in considerazione l'ultimo elemento del vettore "data" nel ciclo for (?), es. numMeas dispari
+  if (2 * i < numMeas) {
     mean += data[2 * i];
     variance += data[2 * i] * data[2 * i];
   }
   mean /= numMeas; variance /= numMeas;
-  //double error = sqrt((variance - mean * mean ) / (numMeas - 1));
-  //printf("mean=%lf \t error= %lf \t numMeas=%ld \n", mean, error, );
   return sqrt((variance - mean * mean ) / (numMeas - 1));
 }

@@ -18,10 +18,10 @@ void GeneraWalkerU(long int D, long int Nw, double **w);                    //in
 double V_pot(long int D, long int tipo, double *Vpar, double *x);                    //calculates the potential felt by the i-th walker
 void Propagazione(long int D,long int N, double **w, double tau);            //each walker does a random walk step
 void Branching(long int D, long int *Nwt,long int Nw, double tau, double *A, double *B, double Et, double **w); //birth-death process
-double norm(double mean, double std_dev); //generates Gaussian numbers with the box-muller algorithm
+double norm(double mean, double std_dev); //generates Gaussian random numbers with the box-muller algorithm
 double rand_val(int seed);         // function similar to rand, generates a random double between 0 and 1
 void f_onda(long int Nbin, double Rmax,long int Nwt,long int D, double **w, double *); //it is used to generate a normalised histogram to represent the wavefunction
-double binning(double *data , long int numMeas);                        //function used for reblocking calculation
+double binning(double *data , long int numMeas);                        //function used for the reblocking calculation
 void f_pot(long int Nbin, double Rmax, long tipo, double* Vpar, double *pot); //it is used to generate a normalised histogram to represent the wavefunction
 
 //to compile: gcc -lm prog.c -o prog
@@ -158,7 +158,7 @@ int main(){
   fprintf(fb, "binSize \t standard error \t numMeas \n");
 
   if (flag==1) {
-    ff=fopen("f_onda_equil.txt","w");  // equilibrium wavefunction
+    ff=fopen("f_onda_equil.txt","w");  // walkers distribution during the equilibration phase
     fprintf(ff,"#R \t \t Phi \n");
     phi = (double*) malloc( Nbin * sizeof(double) );
     phi_eq = (double*) malloc( Nbin * sizeof(double) );
@@ -187,8 +187,8 @@ int main(){
   //start of the main loop
   for( n=0; n<Nsteps; n++ ){
 
-    // A: potentials before the diffusion
-    // B: potentials after the diffusion
+    // A: potential before the diffusion
+    // B: potential after the diffusion
     printf("%6ld  Nwt=%ld ", n, Nwt);
     A = (double*) malloc (Nwt*sizeof(double)); //memory allocation must be done at each step because Nwt is variable
 
@@ -203,10 +203,10 @@ int main(){
       if(n<=Tequil/tau && ((n % stepsperblock)==0)){  //print the wavefunction during the equilibration phase
         fprintf(ff,"# wavefunction at step number %ld \n",n);
         fprintf(ff, "\n");
-        f_onda(Nbin,Rmax,Nwt,D,w,phi); //creates the histogram in the ‘phi’ vector
+        f_onda(Nbin,Rmax,Nwt,D,w,phi); //creates the histogram in the "phi" vector
         if(D>1){
           for(i=0;i<Nbin;i++){
-            fprintf(ff,"%f \t %f \n",delta*(i+0.5), phi[i]);
+            fprintf(ff,"%f \t %f \n", delta*(i+0.5), phi[i]);
           }
           fprintf(ff, "\n");
         }
@@ -306,7 +306,7 @@ int main(){
   fclose(fe);
   fclose(fp);
   
-  //reblocking, see J. Chem. Phys. 91, 461–466 (1989)
+  //reblocking, see J. Chem. Phys. 91, 461-466 (1989)
   binSize = 1;
   while (numMeas >= 100) {
     fprintf(fb,"%ld \t\t %lf \t\t %ld \n", binSize, binning(E_block, numMeas), numMeas);
@@ -489,7 +489,7 @@ double norm(double mean, double std_dev)
 }
 
 
-double rand_val(int seed) //Multiplicative LCG, Schrage’s algorithm
+double rand_val(int seed) //Multiplicative LCG, Schrage's algorithm
 {
   const long  a =      16807;  // Multiplier
   const long  m = 2147483647;  // Modulus, 2^31-1, Mersenne prime
@@ -595,7 +595,7 @@ double binning(double *data , long int numMeas){
     mean += data[2 * i] + data[2 * i + 1];
     variance += data[2 * i] * data[2 * i] +
     data[2 * i + 1] * data[2 * i + 1];
-    data[i] = 0.5 * (data[2 * i] + data[2 * i + 1]);  //prepare the ‘data’ vector for the next binning iteration, each time halving the portion to be analysed
+    data[i] = 0.5 * (data[2 * i] + data[2 * i + 1]);  //prepare the "data" vector for the next binning iteration, each time halving the portion to be analysed
   }
   if (2 * i < numMeas) {
     mean += data[2 * i];
