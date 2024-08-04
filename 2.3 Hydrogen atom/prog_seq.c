@@ -243,7 +243,7 @@ int main(){
     free(B);
 
 
-    // update the value of the energy estimator <Et>
+    // update the value of the energy estimator Ebest = <Et>
     if ( n<=NstepsEq ){
       nblock = n % stepsperblock;
       Ebest = ( Et + Ebest * nblock ) / (nblock+1);
