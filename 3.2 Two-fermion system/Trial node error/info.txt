@@ -1,11 +1,11 @@
 Simulation parameters:
-Harm2ferm2D_Node.quad_error_K0.16_Nw10000_T315
-3D Hydrogen atom
+2D harmonic potential
+Dimensionality = 2D potential x 2 particles = 4
+K_el = 0.16
+K_int = 0
 Uniform distribution of walkers
-dtau = 0.001 a.u.
-Nequil*dtau = 20 a.u.
-Nstep = 400000
+dtau = 5 * 10^(-5) a.u.
+Nequil*dtau = 15 a.u.
+Nstep = 6.3 * 10^6
 Ntarget = 10^4
 Initial Et = 0 a.u.
-Rmax = 20
-Nbin = 1600
