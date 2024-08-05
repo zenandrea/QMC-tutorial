@@ -10,7 +10,7 @@
 #define debug 1
 #define maxNwf 100 //total allocated memory for the walkers' positions
 #define stepsperblock 50 // controls how often the walker distribution is saved in a text file
-#define constraint 10  //it must be >=2 and <<Nw
+#define constraint 10  // it must be >=2 and <<Nw
 //#define Tequil 5.0  // in atomic units
 
 void GeneraWalkerG(long int D, long int Nw, double *Vpar, double **w);                    //initialises walker positions with Gaussian distribution
@@ -159,7 +159,7 @@ int main(){
 
   if (flag==1) {
     ff=fopen("f_onda_seq.txt","w");	// walkers distribution during the entire simulation
-    fprintf(ff,"#R \t \t Phi \n");
+    fprintf(ff,"#x \t \t Phi \n");
     phi = (double*) malloc( Nbin * sizeof(double) );
     phi_eq = (double*) malloc( Nbin * sizeof(double) );
     if (D==1) {

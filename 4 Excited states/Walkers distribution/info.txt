@@ -1,0 +1,12 @@
+Simulation parameters:
+1D harmonic potential
+Dimensionality = 1
+x_node = 0
+K_el = 0.16
+Uniform distribution of walkers
+dtau = 0.0001 a.u.
+Nstep = 4.5 * 10^7
+Ntarget = 10^4
+Initial Et = 0 a.u.
+Rmax = 22
+Nbin = 2200

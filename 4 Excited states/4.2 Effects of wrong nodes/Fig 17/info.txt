@@ -1,0 +1,12 @@
+Simulation parameters:
+1D harmonic potential
+Dimensionality = 1
+K_el = 0.16
+Uniform distribution of walkers, centered at x = 0
+dtau = 0.001 a.u.
+Nstep = 25610000
+dtau*Nequil = 10 a.u.
+Ntarget = 10^4
+Initial Et = 0 a.u.
+Rmax = 22
+Nbin = 2200
